@@ -380,7 +380,7 @@
         title="TurboWarp project player"
         allow="autoplay; fullscreen"
         allowfullscreen
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+        sandbox="allow-same-origin allow-scripts"
       ></iframe>
     </div>
 
@@ -392,10 +392,10 @@
       <button class="ctrl-btn" id="stop-btn" title="Stop – stop all scripts">
         <span class="icon">🛑</span> Stop
       </button>
-      <button class="ctrl-btn" id="pause-btn" title="Pause / Resume the project">
+      <button class="ctrl-btn" id="pause-btn" title="Pause / Resume the project" aria-pressed="false">
         <span class="icon">⏸</span><span class="label"> Pause</span>
       </button>
-      <button class="ctrl-btn" id="fullscreen-btn" title="Toggle fullscreen">
+      <button class="ctrl-btn" id="fullscreen-btn" title="Toggle fullscreen" aria-pressed="false">
         <span class="icon">⛶</span><span class="label"> Fullscreen</span>
       </button>
       <span class="controls-note">TurboWarp in-player controls also work</span>
@@ -479,7 +479,7 @@
 
     searchSection.style.display = 'none';
     playerSection.classList.add('visible');
-    playerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    playerSection.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }
 
   function showSearch() {
@@ -566,11 +566,13 @@
       iconEl.textContent = '▶';
       labelEl.textContent = ' Resume';
       pauseBtn.title = 'Resume the project';
+      pauseBtn.setAttribute('aria-pressed', 'true');
       pauseBtn.classList.add('active');
     } else {
       iconEl.textContent = '⏸';
       labelEl.textContent = ' Pause';
       pauseBtn.title = 'Pause the project';
+      pauseBtn.setAttribute('aria-pressed', 'false');
       pauseBtn.classList.remove('active');
     }
   }
@@ -602,15 +604,18 @@
       iconEl.textContent = '✕';
       labelEl.textContent = ' Exit Fullscreen';
       fullscreenBtn.title = 'Exit fullscreen';
+      fullscreenBtn.setAttribute('aria-pressed', 'true');
     } else {
       iconEl.textContent = '⛶';
       labelEl.textContent = ' Fullscreen';
       fullscreenBtn.title = 'Toggle fullscreen';
+      fullscreenBtn.setAttribute('aria-pressed', 'false');
     }
   }
 
   /* ── Keyboard shortcuts ──────────────────────────────────────── */
   document.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
     if (!currentProjectId) return;
     // Only fire when focus is not inside an input/textarea
     if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;

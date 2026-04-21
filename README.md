@@ -9,7 +9,7 @@ Play any Scratch project at full speed using [TurboWarp](https://turbowarp.org),
 - **Custom controls outside the player:**
   - 🚩 **Green Flag** — restart and run the project
   - 🛑 **Stop** — stop all scripts
-  - ⏸ **Pause / Resume** — pause execution mid-run
+  - ⏸ **Pause / Resume** — pause execution mid-run, if supported by the embedded TurboWarp player
   - ⛶ **Fullscreen** — native browser fullscreen for the player
 - Keyboard shortcut: press **F** to toggle fullscreen while a project is loaded.
 
