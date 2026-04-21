@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turbo-Scratch – Play Scratch Projects with TurboWarp</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #12121e;
+      --surface:   #1e1e30;
+      --surface2:  #2a2a42;
+      --border:    #3a3a58;
+      --accent:    #ff6680;
+      --accent2:   #ff9f43;
+      --text:      #f0f0fa;
+      --subtext:   #9898b8;
+      --green:     #4caf50;
+      --red:       #e53935;
+      --yellow:    #ffc107;
+      --blue:      #2979ff;
+      --radius:    12px;
+      --shadow:    0 8px 32px rgba(0,0,0,.45);
+    }
+
+    html { height: 100%; }
+
+    body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────── */
+    header {
+      width: 100%;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 24px 24px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 4px 16px rgba(255,102,128,.4);
+    }
+
+    h1 {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .tagline {
+      color: var(--subtext);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    /* ── Main layout ──────────────────────────────────────────────── */
+    main {
+      width: 100%;
+      max-width: 960px;
+      padding: 40px 20px 60px;
+      flex: 1;
+    }
+
+    /* ── Search card ──────────────────────────────────────────────── */
+    #search-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 32px;
+    }
+
+    #search-section h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    #project-input {
+      flex: 1;
+      min-width: 220px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    #project-input::placeholder { color: var(--subtext); }
+
+    #project-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(255,102,128,.18);
+    }
+
+    .btn-load {
+      padding: 12px 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      white-space: nowrap;
+    }
+
+    .btn-load:hover { opacity: .88; }
+    .btn-load:active { transform: scale(.97); }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: var(--subtext);
+    }
+
+    .hint code {
+      background: var(--surface2);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: var(--accent2);
+    }
+
+    /* ── Error message ────────────────────────────────────────────── */
+    #error-msg {
+      display: none;
+      margin-top: 14px;
+      padding: 10px 16px;
+      background: rgba(229,57,53,.15);
+      border: 1px solid rgba(229,57,53,.5);
+      border-radius: 8px;
+      color: #ff8a80;
+      font-size: 0.9rem;
+    }
+
+    /* ── Player section ───────────────────────────────────────────── */
+    #player-section {
+      display: none;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    #player-section.visible { display: flex; }
+
+    /* project title bar */
+    #project-titlebar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #project-title-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--subtext);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #project-title-text span {
+      color: var(--text);
+    }
+
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--subtext);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-back:hover { color: var(--text); border-color: var(--text); }
+
+    /* iframe wrapper */
+    #player-wrapper {
+      position: relative;
+      background: #000;
+      width: 100%;
+      /* 4:3 ratio default for Scratch projects */
+      aspect-ratio: 4 / 3;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    #turbowarp-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* fullscreen adjustments */
+    #player-wrapper:fullscreen,
+    #player-wrapper:-webkit-full-screen {
+      aspect-ratio: unset;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* ── Controls bar ─────────────────────────────────────────────── */
+    #controls-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ctrl-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, transform .1s;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .ctrl-btn:hover { background: var(--border); }
+    .ctrl-btn:active { transform: scale(.95); }
+
+    .ctrl-btn .icon { font-size: 1rem; line-height: 1; }
+
+    /* individual button colours */
+    #green-flag-btn { border-color: rgba(76,175,80,.5); }
+    #green-flag-btn:hover { background: rgba(76,175,80,.18); border-color: var(--green); }
+
+    #stop-btn { border-color: rgba(229,57,53,.5); }
+    #stop-btn:hover { background: rgba(229,57,53,.18); border-color: var(--red); }
+
+    #pause-btn { border-color: rgba(255,193,7,.5); }
+    #pause-btn:hover { background: rgba(255,193,7,.18); border-color: var(--yellow); }
+    #pause-btn.active { background: rgba(255,193,7,.25); border-color: var(--yellow); color: var(--yellow); }
+
+    #fullscreen-btn { border-color: rgba(41,121,255,.5); margin-left: auto; }
+    #fullscreen-btn:hover { background: rgba(41,121,255,.18); border-color: var(--blue); }
+
+    .controls-note {
+      font-size: 0.75rem;
+      color: var(--subtext);
+      margin-left: auto;
+    }
+
+    /* ── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 540px) {
+      #search-section { padding: 22px 16px; }
+      main { padding: 24px 12px 48px; }
+      .controls-note { display: none; }
+      #fullscreen-btn { margin-left: 0; }
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────── */
+    footer {
+      width: 100%;
+      border-top: 1px solid var(--border);
+      padding: 18px 24px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--subtext);
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <h1>Turbo-Scratch</h1>
+  </div>
+  <p class="tagline">Play any Scratch project at full speed, powered by TurboWarp</p>
+</header>
+
+<!-- ── Main ───────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Search card -->
+  <section id="search-section">
+    <h2>Enter a Scratch project</h2>
+    <form id="project-form" autocomplete="off">
+      <div class="input-row">
+        <input
+          type="text"
+          id="project-input"
+          placeholder="e.g. 10128407 or https://scratch.mit.edu/projects/10128407/"
+          spellcheck="false"
+        />
+        <button type="submit" class="btn-load">▶ Load Project</button>
+      </div>
+    </form>
+    <p class="hint">
+      Accepts: a project ID like <code>10128407</code>, a full Scratch URL
+      <code>scratch.mit.edu/projects/…</code>, or a TurboWarp URL <code>turbowarp.org/…</code>
+    </p>
+    <div id="error-msg" role="alert"></div>
+  </section>
+
+  <!-- Player section (shown after a project is loaded) -->
+  <section id="player-section" aria-label="Project player">
+
+    <!-- Title bar -->
+    <div id="project-titlebar">
+      <div id="project-title-text">Project ID: <span id="project-id-display"></span></div>
+      <button class="btn-back" id="back-btn" title="Load a different project">⬅ Change project</button>
+    </div>
+
+    <!-- TurboWarp iframe -->
+    <div id="player-wrapper">
+      <iframe
+        id="turbowarp-iframe"
+        title="TurboWarp project player"
+        allow="autoplay; fullscreen"
+        allowfullscreen
+        sandbox="allow-same-origin allow-scripts"
+      ></iframe>
+    </div>
+
+    <!-- Controls bar -->
+    <div id="controls-bar" role="toolbar" aria-label="Project controls">
+      <button class="ctrl-btn" id="green-flag-btn" title="Green Flag – start the project">
+        <span class="icon">🚩</span> Green Flag
+      </button>
+      <button class="ctrl-btn" id="stop-btn" title="Stop – stop all scripts">
+        <span class="icon">🛑</span> Stop
+      </button>
+      <button class="ctrl-btn" id="pause-btn" title="Pause / Resume the project" aria-pressed="false">
+        <span class="icon">⏸</span><span class="label"> Pause</span>
+      </button>
+      <button class="ctrl-btn" id="fullscreen-btn" title="Toggle fullscreen" aria-pressed="false">
+        <span class="icon">⛶</span><span class="label"> Fullscreen</span>
+      </button>
+      <span class="controls-note">TurboWarp in-player controls also work</span>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────────────── -->
+<footer>
+  Powered by <a href="https://turbowarp.org" target="_blank" rel="noopener">TurboWarp</a> &amp;
+  <a href="https://scratch.mit.edu" target="_blank" rel="noopener">Scratch</a>.
+  Turbo-Scratch is not affiliated with the Scratch Team or TurboWarp.
+</footer>
+
+<!-- ── Script ─────────────────────────────────────────────────────── -->
+<script>
+  'use strict';
+
+  /* ── Helpers ─────────────────────────────────────────────────── */
+
+  /**
+   * Extract the numeric Scratch project ID from:
+   *   - A plain number string: "10128407"
+   *   - scratch.mit.edu/projects/10128407[/...]
+   *   - turbowarp.org/10128407[/...]
+   * Returns the ID string, or null if nothing recognisable was found.
+   */
+  function parseProjectId(raw) {
+    const s = raw.trim();
+
+    // Plain integer
+    if (/^\d+$/.test(s)) return s;
+
+    // scratch.mit.edu/projects/<id>
+    const scratchMatch = s.match(/scratch\.mit\.edu\/projects\/(\d+)/i);
+    if (scratchMatch) return scratchMatch[1];
+
+    // turbowarp.org/<id>
+    const twMatch = s.match(/turbowarp\.org\/(\d+)/i);
+    if (twMatch) return twMatch[1];
+
+    return null;
+  }
+
+  /** Build the TurboWarp embed URL for a given project ID. */
+  function embedUrl(id, autoplay) {
+    // id is already validated as /^\d+$/ by parseProjectId, but encode defensively
+    const safeId = encodeURIComponent(id);
+    return `https://turbowarp.org/${safeId}/embed${autoplay ? '?autoplay' : ''}`;
+  }
+
+  /* ── State ───────────────────────────────────────────────────── */
+  let currentProjectId = null;
+  let isPaused = false;
+
+  /* ── DOM refs ────────────────────────────────────────────────── */
+  const form          = document.getElementById('project-form');
+  const input         = document.getElementById('project-input');
+  const errorMsg      = document.getElementById('error-msg');
+  const searchSection = document.getElementById('search-section');
+  const playerSection = document.getElementById('player-section');
+  const idDisplay     = document.getElementById('project-id-display');
+  const iframe        = document.getElementById('turbowarp-iframe');
+  const playerWrapper = document.getElementById('player-wrapper');
+  const backBtn       = document.getElementById('back-btn');
+  const greenFlagBtn  = document.getElementById('green-flag-btn');
+  const stopBtn       = document.getElementById('stop-btn');
+  const pauseBtn      = document.getElementById('pause-btn');
+  const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+  /* ── Show / hide sections ────────────────────────────────────── */
+  function showPlayer(id) {
+    currentProjectId = id;
+    isPaused = false;
+    updatePauseButton();
+
+    idDisplay.textContent = id;
+    iframe.src = embedUrl(id, true); // autoplay=true so green flag fires automatically
+
+    searchSection.style.display = 'none';
+    playerSection.classList.add('visible');
+    playerSection.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  function showSearch() {
+    playerSection.classList.remove('visible');
+    iframe.src = '';
+    currentProjectId = null;
+    isPaused = false;
+    searchSection.style.display = '';
+    input.focus();
+  }
+
+  /* ── Form submission ─────────────────────────────────────────── */
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = parseProjectId(input.value);
+    if (!id) {
+      showError('Could not find a project ID in what you entered. Please enter a numeric ID or a Scratch / TurboWarp project URL.');
+      return;
+    }
+    clearError();
+    showPlayer(id);
+  });
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.style.display = 'block';
+    input.focus();
+  }
+
+  function clearError() {
+    errorMsg.textContent = '';
+    errorMsg.style.display = 'none';
+  }
+
+  /* ── "Change project" button ─────────────────────────────────── */
+  backBtn.addEventListener('click', showSearch);
+
+  /* ── VM control via postMessage ──────────────────────────────── */
+  /**
+   * TurboWarp's embed page listens for postMessage events.
+   * We send standard scratch-vm style commands.
+   * These may silently no-op on older embed versions; the
+   * in-player controls remain as a reliable fallback.
+   */
+  function sendVmCommand(type, extra) {
+    if (!iframe.contentWindow) return;
+    iframe.contentWindow.postMessage({ type, ...extra }, 'https://turbowarp.org');
+  }
+
+  /* ── Green Flag ──────────────────────────────────────────────── */
+  greenFlagBtn.addEventListener('click', () => {
+    isPaused = false;
+    updatePauseButton();
+    // Try postMessage first
+    sendVmCommand('green-flag');
+    // Reliable fallback: reload the embed with autoplay
+    iframe.src = embedUrl(currentProjectId, true);
+  });
+
+  /* ── Stop ────────────────────────────────────────────────────── */
+  stopBtn.addEventListener('click', () => {
+    isPaused = false;
+    updatePauseButton();
+    sendVmCommand('stop-all');
+    // Reliable fallback: reload without autoplay (shows stopped state)
+    iframe.src = embedUrl(currentProjectId, false);
+  });
+
+  /* ── Pause / Resume ──────────────────────────────────────────── */
+  pauseBtn.addEventListener('click', () => {
+    isPaused = !isPaused;
+    updatePauseButton();
+    if (isPaused) {
+      sendVmCommand('pause');
+    } else {
+      sendVmCommand('resume');
+    }
+  });
+
+  function updatePauseButton() {
+    const iconEl = pauseBtn.querySelector('.icon');
+    const labelEl = pauseBtn.querySelector('.label');
+    if (isPaused) {
+      iconEl.textContent = '▶';
+      labelEl.textContent = ' Resume';
+      pauseBtn.title = 'Resume the project';
+      pauseBtn.setAttribute('aria-pressed', 'true');
+      pauseBtn.classList.add('active');
+    } else {
+      iconEl.textContent = '⏸';
+      labelEl.textContent = ' Pause';
+      pauseBtn.title = 'Pause the project';
+      pauseBtn.setAttribute('aria-pressed', 'false');
+      pauseBtn.classList.remove('active');
+    }
+  }
+
+  /* ── Fullscreen ──────────────────────────────────────────────── */
+  fullscreenBtn.addEventListener('click', () => {
+    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+    if (!isFullscreen) {
+      // Request fullscreen on the player wrapper (iframe + any overlays)
+      const requestFn = playerWrapper.requestFullscreen || playerWrapper.webkitRequestFullscreen;
+      if (requestFn) {
+        requestFn.call(playerWrapper);
+      } else {
+        fullscreenBtn.title = 'Fullscreen not supported by this browser';
+      }
+    } else {
+      const exitFn = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exitFn) exitFn.call(document);
+    }
+  });
+
+  document.addEventListener('fullscreenchange', syncFullscreenButton);
+  document.addEventListener('webkitfullscreenchange', syncFullscreenButton);
+
+  function syncFullscreenButton() {
+    const iconEl = fullscreenBtn.querySelector('.icon');
+    const labelEl = fullscreenBtn.querySelector('.label');
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      iconEl.textContent = '✕';
+      labelEl.textContent = ' Exit Fullscreen';
+      fullscreenBtn.title = 'Exit fullscreen';
+      fullscreenBtn.setAttribute('aria-pressed', 'true');
+    } else {
+      iconEl.textContent = '⛶';
+      labelEl.textContent = ' Fullscreen';
+      fullscreenBtn.title = 'Toggle fullscreen';
+      fullscreenBtn.setAttribute('aria-pressed', 'false');
+    }
+  }
+
+  /* ── Keyboard shortcuts ──────────────────────────────────────── */
+  document.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
+    if (!currentProjectId) return;
+    // Only fire when focus is not inside an input/textarea
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+    if (e.key === 'F' || e.key === 'f') {
+      e.preventDefault();
+      fullscreenBtn.click();
+    }
+  });
+</script>
+
+</body>
+</html>
